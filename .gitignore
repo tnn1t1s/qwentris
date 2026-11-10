@@ -1,0 +1,16 @@
+# environments and caches
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+node_modules/
+.DS_Store
+
+# compiled model weights (838 MB); written by deltris/build.py
+models/
+
+# rendered media and rollouts
+*.mp4
+*.pkl
+*.wav
+*.mp3
