@@ -98,8 +98,8 @@ same seeds are used.
 
 Run on one NVIDIA GB10 GPU (fp32, TF32 off) with
 `python -m deltris.record --model $MODEL --device cuda --out $OUT/deltris-p3.mp4`.
-The output is `results/deltris-p3.mp4` (sha256 `86f39f73…bb18c719`, 1280×720,
-15 fps). The rollout is `results/deltris-p3.pkl`.
+The video (1280×720, 15 fps) is not in the repository; `python -m deltris.record`
+regenerates it from the same seed. The rollout it draws from is `results/deltris-p3.pkl`.
 
 ```
 seed 10: first 2-line clear done at 26.1s of video

@@ -1,5 +1,6 @@
-"""Write paper/references.bib from arXiv API metadata (paper/arxiv.xml) plus the GitHub
-API record for Qwenputer. Fetch: see the curl lines in paper/README.md."""
+"""Write paper/references.bib from arXiv API metadata (paper/arxiv.xml), the GitHub API
+records for Qwenputer and nesformer, and the citation meta tags of the Sparks blog post.
+Fetch: see the curl lines in paper/README.md."""
 import json, re, xml.etree.ElementTree as E
 from pathlib import Path
 P = Path(__file__).resolve().parent
@@ -15,8 +16,16 @@ for e in E.parse(P / "arxiv.xml").getroot().findall("a:entry", ns):
     year = e.find("a:published", ns).text[:4]
     out.append(f"@misc{{{KEYS[aid]},\n  title={{{{{title}}}}},\n  author={{{authors}}},\n  year={{{year}}},\n"
                f"  eprint={{{aid}}},\n  archivePrefix={{arXiv}},\n  url={{https://arxiv.org/abs/{aid}}}\n}}\n")
-g = json.load(open(P / "qwenputer.json"))
-out.append(f"@misc{{qwenputer,\n  title={{{{Qwenputer}}: {g['description']}}},\n  author={{{g['owner']['login']}}},\n"
-           f"  year={{{g['created_at'][:4]}}},\n  howpublished={{\\url{{{g['html_url']}}}}}\n}}\n")
+for key, name in (("qwenputer", "Qwenputer"), ("nesformer", "nesformer")):
+    g = json.load(open(P / f"{key}.json"))
+    out.append(f"@misc{{{key},\n  title={{{{{name}}}: {g['description']}}},\n  author={{{g['owner']['login']}}},\n"
+               f"  year={{{g['created_at'][:4]}}},\n  howpublished={{\\url{{{g['html_url']}}}}}\n}}\n")
+# citation_* meta tags of the Sparks blog post; fetch command in paper/README.md
+meta = re.findall(r'<meta name="citation_(\w+)" content="([^"]*)">', (P / "sparks-meta.html").read_text())
+one = lambda k: next(v for kk, v in meta if kk == k)
+authors = " and ".join(v for k, v in meta if k == "author")
+out.append(f"@misc{{takehi2026sparks,\n  title={{{{{one('title').replace('&amp;', chr(92) + '&')}}}}},\n"
+           f"  author={{{authors}}},\n  year={{{one('publication_date')[:4]}}},\n"
+           f"  howpublished={{\\url{{{one('fulltext_html_url')}}}}}\n}}\n")
 (P / "references.bib").write_text("\n".join(out))
 print(len(out), "entries")

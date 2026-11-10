@@ -132,8 +132,9 @@ raises in `DynamicCache.get_seq_length()` on a cached forward pass, unless
 `position_ids` is given and `attention_mask` is a dict keyed by layer type
 (`{"linear_attention": None}`), which skips building the full-attention mask.
 `deltris.compiler.emit_hf.Runner` does both. The model still loads with
-`AutoModelForCausalLM` and no custom code. Unverified: whether `generate()`
-works unmodified. The host loop does not use it.
+`AutoModelForCausalLM` and no custom code. `generate()` raises the same
+`ValueError` (observed on a one-call CPU probe of `models/deltris`), so the
+model runs only under the host loop.
 
 ## D12. Board heads hold one slot each; a display head holds the whole board (§3.1, P3)
 

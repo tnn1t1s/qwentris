@@ -14,5 +14,7 @@ References are built from fetched metadata, not typed. To refetch:
 ```sh
 curl -sL "https://export.arxiv.org/api/query?id_list=2412.06464,2406.06484,2102.11174,2106.06981,2301.05062,2301.13196,2505.09388,2002.05202,1702.03118&max_results=20" -o paper/arxiv.xml
 curl -sL https://api.github.com/repos/divagr18/qwenputer -o paper/qwenputer.json
+curl -sL https://api.github.com/repos/dbreunig/nesformer -o paper/nesformer.json
+curl -sL https://rikiyat.github.io/blog/weight-space-programming/ | grep -o '<meta name="citation_[^>]*>' > paper/sparks-meta.html
 uv run python paper/bib.py
 ```
