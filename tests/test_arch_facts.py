@@ -12,7 +12,7 @@ import transformers
 from transformers import Qwen3_5ForCausalLM, Qwen3_5TextConfig
 from transformers.models.qwen3_5 import modeling_qwen3_5 as mq
 
-L = 30.0  # parameter: SPEC §1 drive level for k, q, v and the beta logit
+from deltris.compiler.graph import A_LOG, L  # the values the compiler writes into the weights
 
 
 def tiny_config(**kw):
@@ -62,7 +62,7 @@ def test_beta_rounds_to_one_and_zero():
 
 
 def test_decay_is_exactly_one():
-    a_log = torch.tensor(-40.0)  # parameter: SPEC §1
+    a_log = torch.tensor(A_LOG)
     dt_bias = torch.tensor(1.0)  # observation: transformers initialises dt_bias to ones
     for a in (0.0, L, -L):
         g = -a_log.exp() * F.softplus(torch.tensor(a) + dt_bias)

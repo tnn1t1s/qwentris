@@ -42,6 +42,12 @@ def main():
 
     # ---- P2 differential test -------------------------------------------
     rows = [json.loads(l) for l in open(ROOT / "results/p2-games.jsonl")]
+    # invariant: one row per game. deltris.difftest appends to its --out file, so a rerun
+    # into the same file repeats every game and would double every count below.
+    dup = [g for g, n in Counter(r["game"] for r in rows).items() if n > 1]
+    if dup:
+        raise SystemExit(f"derive: {len(dup)} games appear more than once in "
+                         f"results/p2-games.jsonl, first {dup[0]!r}; one run per file")
     m["PtwoGames"] = fmt(len(rows))
     sets = {}
     for r in rows:

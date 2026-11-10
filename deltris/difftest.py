@@ -126,6 +126,8 @@ def main():
             fh.flush()
             print(f"{done}/{len(specs)} games, {fails} failing, {time.time() - t0:.0f}s", flush=True)
     print(f"RESULT games={done} failing={fails} seconds={time.time() - t0:.0f}", flush=True)
+    if fails:
+        raise SystemExit(f"difftest: {fails} of {done} games have a token or board mismatch; see {args.out}")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ so line clears play back token by token.
 """
 
 import argparse
+import os
 import pickle
 import time
 
@@ -26,6 +27,9 @@ FPS = 15  # parameter: one shown event per frame; 15/s keeps a falling piece rea
 SECONDS = 60  # SPEC §4 P3: a 60-second recording
 MAX_SEED = 2000  # parameter: seeds scanned for a multi-line clear early in the video
 CLEAR_BY = 45  # parameter: the first multi-line clear must finish by this second
+# parameter: pieces per isa game that pick_seed scans. It bounds the scan only; rollout()
+# plays until SECONDS * FPS frames, not to this piece count.
+SCAN_PIECES = 40
 
 
 # ---- which tokens get a frame ---------------------------------------------------
@@ -49,7 +53,7 @@ def pick_seed():
     from deltris.games import play
 
     for seed in range(MAX_SEED):
-        trace, _ = play(seed, "greedy", max_pieces=40)
+        trace, _ = play(seed, "greedy", max_pieces=SCAN_PIECES)
         idx = shown(trace)
         for f, i in enumerate(idx):
             if f / FPS > CLEAR_BY:
@@ -239,7 +243,7 @@ def main():
           flush=True)
     check_against_isa(rec)
     print("rollout equals the isa trace and oracle board", flush=True)
-    with open(args.out.rsplit(".", 1)[0] + ".pkl", "wb") as fh:
+    with open(os.path.splitext(args.out)[0] + ".pkl", "wb") as fh:
         pickle.dump({"seed": seed, "rec": rec}, fh)
     t0 = time.time()
     n = render(rec, args.out, SECONDS)

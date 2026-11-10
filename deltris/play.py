@@ -39,7 +39,7 @@ def run(sess, bag, next_action, draw):
     while True:
         if stop == ("GAME_OVER",):
             return lines
-        if stop == ("NEED_PIECE",) or stop == ("BOS",):
+        if stop == ("NEED_PIECE",):
             stop = feed(("PIECE", bag.next()))
             continue
         assert stop in isa.STOP_TOKENS, stop

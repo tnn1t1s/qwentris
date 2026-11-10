@@ -12,5 +12,7 @@ models/
 # rendered media and rollouts
 *.mp4
 *.pkl
+# the P3 rollout is an input to paper/derive.py
+!results/deltris-p3.pkl
 *.wav
 *.mp3
