@@ -2,7 +2,7 @@
 
 ## P0 – Oracles: passed (2026-11-03)
 
-`uv run pytest -q -s tests/ --cov=deltris.ref --cov-branch`
+`uv run pytest -q -s tests/ --cov=qwentris.ref --cov-branch`
 
 ```
 10000 random games to top-out, 61 lines
@@ -10,9 +10,9 @@
 vocabulary size 35309
 
 Name                      Stmts   Miss Branch BrPart  Cover   Missing
-deltris/ref/isa.py          125      1     64      1    99%   165
-deltris/ref/players.py       39      1     18      1    96%   51
-deltris/ref/tetris.py        83      0     28      0   100%
+qwentris/ref/isa.py          125      1     64      1    99%   165
+qwentris/ref/players.py       39      1     18      1    96%   51
+qwentris/ref/tetris.py        83      0     28      0   100%
 30 passed in 35.69s
 ```
 
@@ -64,11 +64,11 @@ at every layer. Observed: the memory test printed margin 0.500000 (residual erro
 
 Run on one NVIDIA GB10 GPU (fp32, TF32 off), container image
 `nvidia/cuda:13.0.2-base-ubuntu24.04`, torch 2.15.0+cu132, transformers 5.22.1.
-Command: `python -m deltris.difftest --random 10000 --greedy 500`; per-game results: `results/p2-games.jsonl`
+Command: `python -m qwentris.difftest --random 10000 --greedy 500`; per-game results: `results/p2-games.jsonl`
 (sha256 `bcc0f7d5…70e6d`).
 
 ```
-tests/test_deltris.py       4 passed in 87.28s   (same job, CPU)
+tests/test_qwentris.py       4 passed in 87.28s   (same job, CPU)
   reference: 50 random + 5 greedy games, 184 lines
   compiled: 186 tokens, max residual error 3.22e-06
 wrote model: hidden 1681, layers 6, intermediate 1860, heads 25, vocab 35309
@@ -97,9 +97,9 @@ same seeds are used.
 ## P3 – Play and record: passed (2026-11-03)
 
 Run on one NVIDIA GB10 GPU (fp32, TF32 off) with
-`python -m deltris.record --model $MODEL --device cuda --out $OUT/deltris-p3.mp4`.
-The video (1280×720, 15 fps) is not in the repository; `python -m deltris.record`
-regenerates it from the same seed. The rollout it draws from is `results/deltris-p3.pkl`.
+`python -m qwentris.record --model $MODEL --device cuda --out $OUT/qwentris-p3.mp4`.
+The video (1280×720, 15 fps) is not in the repository; `python -m qwentris.record`
+regenerates it from the same seed. The rollout it draws from is `results/qwentris-p3.pkl`.
 
 ```
 seed 10: first 2-line clear done at 26.1s of video
@@ -121,7 +121,7 @@ RESULT frames=900 seconds=60.0 multi_line_clears=1 render=11s
   NEED_PIECE, so each line clear plays out row by row. The 4-row lock at token
   831 completes rows 17 and 18. A 2-line clear follows (LINES 2 at token 832),
   and the stack shifts down two rows by SRC/WROW.
-- `python -m deltris.play --model models/deltris --device cpu` runs the same
+- `python -m qwentris.play --model models/qwentris --device cpu` runs the same
   host loop in curses with arrow keys, drawn only from decoded state. A
   headless run of the loop with scripted moves on the laptop CPU measured
   about 135 ms per token, roughly 0.4 s per tick.

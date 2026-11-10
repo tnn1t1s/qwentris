@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from transformers import DynamicCache, Qwen3_5ForCausalLM, Qwen3_5TextConfig
 
-from deltris.compiler.graph import A_LOG, L, LOGIT_SCALE, RMS_EPS
+from qwentris.compiler.graph import A_LOG, L, LOGIT_SCALE, RMS_EPS
 
 CONV_KERNEL = 4  # invariant: Qwen3.5 linear_conv_kernel_dim; weight [0,0,0,1] passes the current token
 

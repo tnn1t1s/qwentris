@@ -1,4 +1,4 @@
-from deltris.ref.tetris import (
+from qwentris.ref.tetris import (
     FULL_ROW,
     PIECES,
     SHAPES,

@@ -1,5 +1,5 @@
 [project]
-name = "deltris"
+name = "qwentris"
 version = "0.0.1"
 description = "Tetris compiled into Gated DeltaNet weights"
 requires-python = ">=3.11"
@@ -21,4 +21,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["deltris"]
+packages = ["qwentris"]

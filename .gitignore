@@ -6,13 +6,13 @@ __pycache__/
 node_modules/
 .DS_Store
 
-# compiled model weights (838 MB); written by deltris/build.py
+# compiled model weights (838 MB); written by qwentris/build.py
 models/
 
 # rendered media and rollouts
 *.mp4
 *.pkl
 # the P3 rollout is an input to paper/derive.py
-!results/deltris-p3.pkl
+!results/qwentris-p3.pkl
 *.wav
 *.mp3

@@ -1,6 +1,6 @@
-"""P2 acceptance: the compiled Deltris model plays the protocol exactly.
+"""P2 acceptance: the compiled Qwentris model plays the protocol exactly.
 
-The full 10 000-game differential test runs on a GPU with python -m deltris.difftest.
+The full 10 000-game differential test runs on a GPU with python -m qwentris.difftest.
 These tests run the same checks on a CPU at a size that
 fits one core.
 """
@@ -12,30 +12,30 @@ import pytest
 import torch
 from transformers import AutoModelForCausalLM
 
-from deltris.build import compile_deltris
-from deltris.compiler.emit_hf import Runner, build, load
-from deltris.difftest import run_batch
-from deltris.games import play
-from deltris.ref import isa
+from qwentris.build import compile_qwentris
+from qwentris.compiler.emit_hf import Runner, build, load
+from qwentris.difftest import run_batch
+from qwentris.games import play
+from qwentris.ref import isa
 
 # parameter: reference-evaluator games (pure NumPy, ~0.5 ms per token)
-N_REF_RANDOM = int(os.environ.get("DELTRIS_P2_REF_RANDOM", "50"))
-N_REF_GREEDY = int(os.environ.get("DELTRIS_P2_REF_GREEDY", "5"))
+N_REF_RANDOM = int(os.environ.get("QWENTRIS_P2_REF_RANDOM", "50"))
+N_REF_GREEDY = int(os.environ.get("QWENTRIS_P2_REF_GREEDY", "5"))
 # parameter: compiled-model games on CPU. The stock depthwise conv1d runs as a per-channel
 # loop on CPU (observed ~150 ms per token on the laptop), so laptop runs stay short.
-N_HF_PIECES = int(os.environ.get("DELTRIS_P2_HF_PIECES", "3"))
+N_HF_PIECES = int(os.environ.get("QWENTRIS_P2_HF_PIECES", "3"))
 
 
 @pytest.fixture(scope="module")
 def prog():
-    return compile_deltris()
+    return compile_qwentris()
 
 
 @pytest.fixture(scope="module")
 def model(prog, tmp_path_factory):
     """Compiled, saved with save_pretrained, reloaded with AutoModelForCausalLM."""
     config, sd = build(prog)
-    path = tmp_path_factory.mktemp("deltris")
+    path = tmp_path_factory.mktemp("qwentris")
     load(config, sd).save_pretrained(path)
     m = AutoModelForCausalLM.from_pretrained(path, dtype=torch.float32).eval()
     assert type(m).__name__ == "Qwen3_5ForCausalLM"

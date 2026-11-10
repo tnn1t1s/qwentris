@@ -1,6 +1,6 @@
 # Paper
 
-`main.tex` is the paper. Every number in it is a macro from `numbers.tex`, and both figures are TikZ files; `derive.py` writes all three from `results/` and `models/deltris`. `claims.md` lists each claim with its type and the artifact behind it.
+`main.tex` is the paper. Every number in it is a macro from `numbers.tex`, and both figures are TikZ files; `derive.py` writes all three from `results/` and `models/qwentris`. `claims.md` lists each claim with its type and the artifact behind it.
 
 Build, from the repository root:
 

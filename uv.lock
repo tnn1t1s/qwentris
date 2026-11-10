@@ -251,7 +251,7 @@ nvtx = [
 ]
 
 [[package]]
-name = "deltris"
+name = "qwentris"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [

@@ -1,4 +1,4 @@
-# SPEC: Deltris — Tetris compiled directly into Gated DeltaNet weights
+# SPEC: Qwentris — Tetris compiled directly into Gated DeltaNet weights
 
 Status: research spec. Audience: an implementation agent plus the project owner.
 Sections 1–6 are engineering and should be followed literally. Section 7 is the research protocol.
@@ -69,7 +69,7 @@ Apple MPS in fp32. No GPU and no training are needed.** Pin the exact `transform
 
 ---
 
-## 2. Game rules (reference engine, `deltris/ref/tetris.py`)
+## 2. Game rules (reference engine, `qwentris/ref/tetris.py`)
 
 - Board: 10 columns × 20 rows. Row 0 is the top. No hidden rows in v1.
 - Pieces: I, O, T, S, Z, J, L. Rotation states are 4 fixed bitmaps per piece inside a 4×4 box (use the
@@ -161,7 +161,7 @@ Any change must first be made in the ISA interpreter and pass the P0 tests.
   `isa.py` equals `tetris.py`. Include forced cases: an I-piece Tetris (4-line clear), non-contiguous
   clears (rows 17 and 19), top-out, and rotation rejected at a wall.
 
-### P1 – Compiler primitives (`deltris/compiler/`)
+### P1 – Compiler primitives (`qwentris/compiler/`)
 Write a small graph DSL that compiles to **real `Qwen3_5ForCausalLM` weights**. Primitives:
 - `onehot_field`, `dualrail_field` (residual layout allocator, with a ONE and FILL dim)
 - `mem_write(group, slot_from_token, value_from_token, enable_from_token)` and
@@ -179,7 +179,7 @@ Tests for every row of the §1 table (beta = 1.0 exactly, decay = 1.0 exactly, e
 writes to the same slot).
 
 ### P2 – Full compile
-- `compile_deltris() → (config, state_dict)`. Save it with `save_pretrained`.
+- `compile_qwentris() → (config, state_dict)`. Save it with `save_pretrained`.
   `AutoModelForCausalLM.from_pretrained` must load it with **no custom code**.
 - Use all-`linear_attention` layer types. Pick the hidden size and layer count yourself. Expect roughly
   1–3k dims and 10–20 layers, and write the final numbers down in `DECISIONS.md`.
@@ -201,16 +201,16 @@ writes to the same slot).
 - Rotation-invariance check (needed for §7): apply a random orthogonal rotation to the residual stream
   (`E ← E·R`, every input projection `W ← Rᵀ·W`, every output projection `W ← W·R`; the RMSNorm
   weights are all 1, so this is exact). Permute the MLP hidden units randomly. **Accept:** the
-  differential test still passes 100%. Ship both `deltris-clean` and `deltris-rotated`.
+  differential test still passes 100%. Ship both `qwentris-clean` and `qwentris-rotated`.
 
 ---
 
 ## 5. Repo layout
 ```
-deltris/
+qwentris/
   ref/        tetris.py, isa.py
   compiler/   layout.py, primitives.py, graph.py, emit_hf.py
-  build.py    -> checkpoints/deltris-clean, checkpoints/deltris-rotated
+  build.py    -> checkpoints/qwentris-clean, checkpoints/qwentris-rotated
   play.py  record.py  difftest.py
 tests/        test_ref.py, test_isa.py, test_primitives.py, test_arch_facts.py, test_diff.py
 DECISIONS.md  PROGRESS.md  README.md  pyproject.toml   (torch, transformers==<pinned>, numpy, pytest)
@@ -227,7 +227,7 @@ DECISIONS.md  PROGRESS.md  README.md  pyproject.toml   (torch, transformers==<pi
 
 ## 7. Research protocol: weight-space programming with ground truth
 
-This is the reason for building Deltris. The Sparks post grades by behaviour. We can grade by
+This is the reason for building Qwentris. The Sparks post grades by behaviour. We can grade by
 **construction**, because we know every circuit.
 
 ### 7.1 Isolation
@@ -235,7 +235,7 @@ This is the reason for building Deltris. The Sparks post grades by behaviour. We
   the repo, or the internet**. It gets only what the task lists.
 - Every task is run at forward-pass budgets **{0, 10, 50}**, which mirrors the post. A "forward pass" is
   one call to a provided `run(tokens) → logits, states` tool, and each call is counted and logged.
-- Every task is run on **both** `deltris-clean` and `deltris-rotated` (§P4).
+- Every task is run on **both** `qwentris-clean` and `qwentris-rotated` (§P4).
 
 ### 7.2 READ tasks (given: safetensors + config.json, nothing else)
 Graded by rubric against ground truth:
@@ -266,7 +266,7 @@ diff, and whether the edit is in the right component.
 | FIX score | ? | ? |
 
 **Hypothesis:** an LLM reads compiled weights mainly through **basis-aligned sparsity**, so READ
-and FIX should collapse on `deltris-rotated` even though the function is identical. If they don't
+and FIX should collapse on `qwentris-rotated` even though the function is identical. If they don't
 collapse, the subject is reading the actual structure, which is a much stronger claim than anything
 in the Sparks post. Trained networks are never basis-aligned, so the rotated variant is the
 honest proxy for the case that matters.
@@ -276,6 +276,6 @@ honest proxy for the case that matters.
 ## 8. Stretch goals (only after P4)
 - SRS wall kicks, hold, hard drop (a hard drop is a loop of gravity tokens, which is a nice extra microprogram).
 - In-model 7-bag RNG (a xorshift in a register head).
-- Graft Deltris into Qwen3.5-4B as extra layers and dims, the way Qwenputer does, so that the language model can
+- Graft Qwentris into Qwen3.5-4B as extra layers and dims, the way Qwenputer does, so that the language model can
   call it with "start Tetris".
 - Fewer tokens per line clear: write several rows per token using several BOARD groups.

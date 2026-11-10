@@ -1,6 +1,6 @@
-"""Play Deltris in the terminal (SPEC §4 P3).
+"""Play Qwentris in the terminal (SPEC §4 P3).
 
-    uv run python -m deltris.play --model models/deltris --device cpu
+    uv run python -m qwentris.play --model models/qwentris --device cpu
 
 Arrow keys: left/right move, up rotates clockwise, down (or no key within
 TICK_SECONDS) sends NOOP. q quits. The board, the falling piece and the counters are
@@ -12,7 +12,7 @@ import argparse
 import curses
 import time
 
-from deltris.ref.tetris import HEIGHT, WIDTH, SevenBag
+from qwentris.ref.tetris import HEIGHT, WIDTH, SevenBag
 
 TICK_SECONDS = 0.5  # parameter: wait for a key before sending NOOP; gravity runs once per ACT
 KEYS = {curses.KEY_LEFT: "LEFT", curses.KEY_RIGHT: "RIGHT", curses.KEY_UP: "ROT_CW", curses.KEY_DOWN: "NOOP"}
@@ -21,7 +21,7 @@ KEYS = {curses.KEY_LEFT: "LEFT", curses.KEY_RIGHT: "RIGHT", curses.KEY_UP: "ROT_
 def run(sess, bag, next_action, draw):
     """Host loop. next_action() -> action name or None to quit; draw(state, info) shows a frame.
     -> number of lines cleared, counted from the model's LINES tokens."""
-    from deltris.ref import isa
+    from qwentris.ref import isa
 
     lines, ms = 0, 0.0
 
@@ -59,10 +59,10 @@ def main():
     import torch
     from transformers import AutoModelForCausalLM
 
-    from deltris.build import compile_deltris
-    from deltris.host import Session, piece_overlay
+    from qwentris.build import compile_qwentris
+    from qwentris.host import Session, piece_overlay
 
-    prog = compile_deltris()
+    prog = compile_qwentris()
     model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float32).to(args.device).eval()
     sess = Session(model, prog)
 
@@ -80,7 +80,7 @@ def main():
             board, regs = sess.board(state), sess.registers(state)
             live = set(piece_overlay(regs["piece"])) if regs["phase"] in ("PLAY", "LOCK") else set()
             scr.erase()
-            scr.addstr(0, 0, "Deltris  (drawn from the model's DeltaNet state)")
+            scr.addstr(0, 0, "Qwentris  (drawn from the model's DeltaNet state)")
             for r in range(HEIGHT):
                 row = "".join("[]" if (r, c) in live else ("##" if board[r] >> c & 1 else " .")
                               for c in range(WIDTH))

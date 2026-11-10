@@ -9,8 +9,8 @@ import numpy as np
 import torch
 from transformers import DynamicCache
 
-from deltris.ref import isa
-from deltris.ref.tetris import HEIGHT, WIDTH, piece_cells
+from qwentris.ref import isa
+from qwentris.ref.tetris import HEIGHT, WIDTH, piece_cells
 
 
 class Session:

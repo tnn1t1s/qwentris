@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from deltris.compiler.layout import Field
+from qwentris.compiler.layout import Field
 
 # parameter: SiLU gain for MLP units. Chosen so silu(G)/G == 1.0 and |silu(-G)| < 1e-11
 # in fp32 (tests/test_primitives.py checks both); larger values buy nothing.

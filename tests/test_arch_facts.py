@@ -12,7 +12,7 @@ import transformers
 from transformers import Qwen3_5ForCausalLM, Qwen3_5TextConfig
 from transformers.models.qwen3_5 import modeling_qwen3_5 as mq
 
-from deltris.compiler.graph import A_LOG, L  # the values the compiler writes into the weights
+from qwentris.compiler.graph import A_LOG, L  # the values the compiler writes into the weights
 
 
 def tiny_config(**kw):

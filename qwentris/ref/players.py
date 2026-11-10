@@ -1,7 +1,7 @@
 """Host-side action sources for tests. Random play almost never clears lines, so
 the greedy player exists to exercise the CLEAR microprogram in bulk."""
 
-from deltris.ref.tetris import HEIGHT, WIDTH, X_RANGE, clear_full_rows, legal, piece_cells
+from qwentris.ref.tetris import HEIGHT, WIDTH, X_RANGE, clear_full_rows, legal, piece_cells
 
 
 def _drop(board, piece):

@@ -65,7 +65,7 @@ columns. JLSTZ use a 3×3 rotation box and I a 4×4 box, rotated clockwise as
 
 10 000 random-action games produced 61 lines in total and no multi-line clears,
 so random play alone barely exercises CLEAR. The P0 test also runs 500 games of
-100 pieces with a greedy placement player (`deltris/ref/players.py`), which gives
+100 pieces with a greedy placement player (`qwentris/ref/players.py`), which gives
 18 348 lines and 1 348 multi-line clears. P2 should use both sets.
 
 ## D8. transformers pinned to 5.22.1 (§1)
@@ -80,22 +80,22 @@ The pure-PyTorch delta rule and conv are fallbacks behind
 `use_kernel_func_from_hub_with_fallback`. If `fla` or `causal_conv1d` is
 installed, different kernels run. The environment must not include them.
 
-## D9. §7.5 becomes a difficulty ladder; `deltris-rotated` tests wiring only (§7.5, P4)
+## D9. §7.5 becomes a difficulty ladder; `qwentris-rotated` tests wiring only (§7.5, P4)
 
 Rotating the residual stream changes only the basis of the residual stream that
 connects the modules. SiLU acts on each coordinate of q, k, v and of the MLP
 hidden units, which fixes their basis, so per-head keys, values, state and MLP
-units stay readable after rotation. `deltris-rotated` therefore tests whether
+units stay readable after rotation. `qwentris-rotated` therefore tests whether
 the subject can trace wiring between modules, not whether it depends on sparsity.
 
 The headline becomes READ and FIX scores across four variants of increasing
 difficulty:
 
-1. `deltris-clean`
-2. `deltris-rotated`: residual rotation plus MLP permutation (P4 as written)
-3. `deltris-dummy`: rotated plus dense dummy circuits whose outputs do not
+1. `qwentris-clean`
+2. `qwentris-rotated`: residual rotation plus MLP permutation (P4 as written)
+3. `qwentris-dummy`: rotated plus dense dummy circuits whose outputs do not
    reach the logits; the function stays exact
-4. `deltris-distilled`: same architecture trained to imitate `isa.py` traces
+4. `qwentris-distilled`: same architecture trained to imitate `isa.py` traces
 
 The point where scores drop says which kind of structure the subject relies on.
 Variant 4 differs in kind (see open questions below) and is the only part of the
@@ -131,9 +131,9 @@ Observed on transformers 5.22.1: a model whose layers are all `linear_attention`
 raises in `DynamicCache.get_seq_length()` on a cached forward pass, unless
 `position_ids` is given and `attention_mask` is a dict keyed by layer type
 (`{"linear_attention": None}`), which skips building the full-attention mask.
-`deltris.compiler.emit_hf.Runner` does both. The model still loads with
+`qwentris.compiler.emit_hf.Runner` does both. The model still loads with
 `AutoModelForCausalLM` and no custom code. `generate()` raises the same
-`ValueError` (observed on a one-call CPU probe of `models/deltris`), so the
+`ValueError` (observed on a one-call CPU probe of `models/qwentris`), so the
 model runs only under the host loop.
 
 ## D12. Board heads hold one slot each; a display head holds the whole board (§3.1, P3)
@@ -145,10 +145,10 @@ gives P3 its heatmap and P2 a single place to decode the board from. The P1
 memory test checks the DISPLAY decode.
 
 
-## D13. Deltris model size and circuit (§4 P2)
+## D13. Qwentris model size and circuit (§4 P2)
 
-The compiler picks the sizes; they are recorded here, not tuned. `compile_deltris()`
-(deltris/build.py) gives hidden size 1681, 6 layers, intermediate size 1860,
+The compiler picks the sizes; they are recorded here, not tuned. `compile_qwentris()`
+(qwentris/build.py) gives hidden size 1681, 6 layers, intermediate size 1860,
 25 DeltaNet heads (k_dim 20, v_dim 45), vocabulary 35 309: 219.7M parameters,
 838 MB as fp32 safetensors. Most of it is the embedding and LM head over the
 vocabulary.

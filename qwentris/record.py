@@ -5,7 +5,7 @@ decoded from the PIECE register's state; (2) the raw DISPLAY state matrix
 [k_dim x v_dim] as a heatmap; (3) the registers decoded from state; (4) the scrolling
 token trace with memory writes highlighted.
 
-    python -m deltris.record --model DIR --device cuda --out game.mp4
+    python -m qwentris.record --model DIR --device cuda --out game.mp4
 
 The host plays greedy moves planned from the decoded board. One video frame is drawn
 at the end of every tick and after every token of the LOCK and CLEAR microprograms,
@@ -19,9 +19,9 @@ import time
 
 import numpy as np
 
-from deltris.ref import isa
-from deltris.ref.players import greedy_plan
-from deltris.ref.tetris import HEIGHT, WIDTH, SevenBag
+from qwentris.ref import isa
+from qwentris.ref.players import greedy_plan
+from qwentris.ref.tetris import HEIGHT, WIDTH, SevenBag
 
 FPS = 15  # parameter: one shown event per frame; 15/s keeps a falling piece readable
 SECONDS = 60  # SPEC §4 P3: a 60-second recording
@@ -50,7 +50,7 @@ def shown(trace):
 def pick_seed():
     """Lowest seed whose greedy game finishes a multi-line clear by CLEAR_BY seconds.
     Uses the isa interpreter only; P2 showed the model's trace equals it."""
-    from deltris.games import play
+    from qwentris.games import play
 
     for seed in range(MAX_SEED):
         trace, _ = play(seed, "greedy", max_pieces=SCAN_PIECES)
@@ -68,7 +68,7 @@ def pick_seed():
 # ---- model rollout ----------------------------------------------------------------
 def rollout(model, prog, seed, n_frames):
     """Play greedy Tetris on the model until n_frames frames are covered or game over."""
-    from deltris.host import Session
+    from qwentris.host import Session
 
     sess = Session(model, prog)
     bag = SevenBag(seed)
@@ -155,12 +155,12 @@ def render(rec, out, seconds):
         r = rec[i]
         img = Image.new("RGB", (W, H), BG)
         d = ImageDraw.Draw(img)
-        d.text((40, 20), "Deltris: Tetris compiled into stock Qwen3.5 Gated DeltaNet weights", font=big, fill=FG)
+        d.text((40, 20), "Qwentris: Tetris compiled into stock Qwen3.5 Gated DeltaNet weights", font=big, fill=FG)
         d.text((40, 52), f"token {i:5d}   lines {lines}   every pixel below is decoded from the model's "
                          "recurrent state", font=small, fill=DIM)
 
         # (1) board from DISPLAY state, falling piece from PIECE register state
-        from deltris.host import piece_overlay
+        from qwentris.host import piece_overlay
 
         regs = r["regs"]
         live = set(piece_overlay(regs["piece"])) if regs["phase"] in ("PLAY", "LOCK") else set()
@@ -229,13 +229,13 @@ def main():
     import torch
     from transformers import AutoModelForCausalLM
 
-    from deltris.build import compile_deltris
+    from qwentris.build import compile_qwentris
 
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     seed, k, at = pick_seed()
     print(f"seed {seed}: first {k}-line clear done at {at:.1f}s of video", flush=True)
-    prog = compile_deltris()
+    prog = compile_qwentris()
     model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float32).to(args.device).eval()
     t0 = time.time()
     rec = rollout(model, prog, seed, SECONDS * FPS)

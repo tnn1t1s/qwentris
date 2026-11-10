@@ -11,16 +11,16 @@ import torch.nn.functional as F
 from transformers import AutoModelForCausalLM
 from transformers.models.qwen3_5 import modeling_qwen3_5 as mq
 
-from deltris.compiler import primitives as P
-from deltris.compiler.emit_hf import Runner, build, load
-from deltris.compiler.graph import G, Program
-from deltris.compiler.layout import bits, not_, relabel
-from deltris.ref.tetris import SHAPES, X_RANGE
+from qwentris.compiler import primitives as P
+from qwentris.compiler.emit_hf import Runner, build, load
+from qwentris.compiler.graph import G, Program
+from qwentris.compiler.layout import bits, not_, relabel
+from qwentris.ref.tetris import SHAPES, X_RANGE
 
 MIN_MARGIN = 0.4  # invariant: SPEC §4 P1
 NORM_RTOL = 1e-5  # invariant: SPEC §3.2
 # parameter: writes in the exact-overwrite test; SPEC §4 P1 asks for 10^6
-N_OVERWRITES = int(os.environ.get("DELTRIS_OVERWRITES", "1000000"))
+N_OVERWRITES = int(os.environ.get("QWENTRIS_OVERWRITES", "1000000"))
 
 
 def run_checked(prog, tokens):

@@ -5,15 +5,15 @@ import random
 
 import pytest
 
-from deltris.ref import isa
-from deltris.ref.players import greedy_plan
-from deltris.ref.tetris import ACTIONS, FULL_ROW, Game, SevenBag
+from qwentris.ref import isa
+from qwentris.ref.players import greedy_plan
+from qwentris.ref.tetris import ACTIONS, FULL_ROW, Game, SevenBag
 
-N_GAMES = int(os.environ.get("DELTRIS_P0_GAMES", "10000"))  # parameter: SPEC §4 P0 asks for 10 000
+N_GAMES = int(os.environ.get("QWENTRIS_P0_GAMES", "10000"))  # parameter: SPEC §4 P0 asks for 10 000
 # parameter: random play almost never clears lines (1 line in 50 games), so a
 # second set of greedy games covers CLEAR. 500 x 100 pieces gives ~18k lines and
 # ~1.3k multi-line clears in ~25 s on one core.
-N_GREEDY = int(os.environ.get("DELTRIS_P0_GREEDY", "500"))
+N_GREEDY = int(os.environ.get("QWENTRIS_P0_GREEDY", "500"))
 GREEDY_PIECES = 100
 
 

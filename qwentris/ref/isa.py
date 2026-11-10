@@ -1,4 +1,4 @@
-"""Interpreter for the Deltris token protocol (SPEC §3, as amended in DECISIONS.md).
+"""Interpreter for the Qwentris token protocol (SPEC §3, as amended in DECISIONS.md).
 
 The interpreter is held to the same information limit as the compiled model:
 `next_token(tok, mem)` sees only the current token and the memory map after that
@@ -10,7 +10,7 @@ the constant-norm rule (SPEC §3.2).
 
 from dataclasses import dataclass, field
 
-from deltris.ref.tetris import (
+from qwentris.ref.tetris import (
     ACTIONS,
     FULL_ROW,
     HEIGHT,

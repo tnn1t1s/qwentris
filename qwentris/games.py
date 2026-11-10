@@ -2,9 +2,9 @@
 
 import random
 
-from deltris.ref import isa
-from deltris.ref.players import greedy_plan
-from deltris.ref.tetris import ACTIONS, Game, SevenBag
+from qwentris.ref import isa
+from qwentris.ref.players import greedy_plan
+from qwentris.ref.tetris import ACTIONS, Game, SevenBag
 
 
 def play(seed, policy="random", max_pieces=None):

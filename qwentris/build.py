@@ -1,4 +1,4 @@
-"""compile_deltris(): the Deltris protocol (deltris/ref/isa.py) as a Program.
+"""compile_qwentris(): the Qwentris protocol (qwentris/ref/isa.py) as a Program.
 
 Memory (layer-0 heads, every one read after its write):
   R0..R19  one slot each, a 10-bit dualrail board row (D2, D12);
@@ -9,11 +9,11 @@ The MLPs compute the next token from the current token and those reads. Layer
 numbers below are where ASAP scheduling puts each op (see Program.mlp_layer).
 """
 
-from deltris.compiler import primitives as P
-from deltris.compiler.graph import Program
-from deltris.compiler.layout import as_onehot, bits, not_, relabel
-from deltris.ref import isa
-from deltris.ref.tetris import (
+from qwentris.compiler import primitives as P
+from qwentris.compiler.graph import Program
+from qwentris.compiler.layout import as_onehot, bits, not_, relabel
+from qwentris.ref import isa
+from qwentris.ref.tetris import (
     ACTIONS,
     FULL_ROW,
     HEIGHT,
@@ -77,7 +77,7 @@ def _occ_bits(p, rot, y):
     return v
 
 
-def compile_deltris():
+def compile_qwentris():
     prog = Program()
     vocab = isa.vocabulary()
 
@@ -339,9 +339,9 @@ def compile_deltris():
 
 def save(out_dir):
     """Compile and write a stock Qwen3_5ForCausalLM checkpoint (fp32 safetensors)."""
-    from deltris.compiler.emit_hf import build, load
+    from qwentris.compiler.emit_hf import build, load
 
-    prog = compile_deltris()
+    prog = compile_qwentris()
     config, sd = build(prog)
     model = load(config, sd)
     model.save_pretrained(out_dir)

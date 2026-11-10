@@ -27,14 +27,53 @@ In the CLEAR phase the model walks up the board from the bottom. For each row it
 
 ![The clear phase rewriting every row from the bottom up](docs/clear.png)
 
+## How the rules become MLP weights
+
+The residual stream is divided into named fields, and every field holds 0s and 1s. A one-hot field such as `cand_x` (the x position a move would go to) has one dimension per label, with exactly one of them set. A dual-rail field stores each bit twice, as *b* and 1−*b*; NOT costs nothing, because reading the second dimension gives the negation. One dimension, ONE, is always 1 and stands in for the bias that the architecture doesn't have.
+
+Qwen3.5's MLP is SwiGLU. Hidden unit *i* computes silu(gate_i · *x*) × (up_i · *x*), and the down projection adds that product back into the residual. Qwentris uses each hidden unit as one logic gate, with gate weights of ±30 and an up weight of 1/30 on ONE. Two fp32 facts make the output exact: silu(30) rounds to exactly 30, so silu(30)/30 = 1.0, and silu(0) = 0. A gate sum of −30 gives silu(−30) ≈ −3×10⁻¹², which is zero as far as the argmax is concerned. A unit therefore outputs 1 when its gate sum is exactly 30 and 0 when the sum is 0 or below, and the compiler sets the gate weights so that the sum reaches 30 only for the inputs the rule names.
+
+Here is one rule from layer 0, printed from the compiled program: "if the action is LEFT and the piece is at x = 4, the candidate x is 3".
+
+| Projection | Weights of this unit |
+|---|---|
+| gate | +30 on `act=LEFT`, +30 on `piece.x=4`, −30 on ONE |
+| up | 1/30 on ONE |
+| down | +1 on `cand_x=3` |
+
+When both conditions hold, the gate sum is 30 + 30 − 30 = 30 and the unit writes 1 into `cand_x=3`. With one condition the sum is 0, with neither it is −30, and the unit writes 0. The compiler emits one such unit for each (action, x) pair. Exactly one pair matches on any token, so exactly one label of `cand_x` comes out as 1.
+
+Every rule in the game is one of five unit patterns, each in `qwentris/compiler/primitives.py` with a NumPy reference that the tests compare against:
+
+- **Lookup table**: one unit per input combination, as above. This gives the candidate rotation and x, the piece's cells for each (type, rotation, x), and the board rows a piece occupies.
+- **AND of two bits**: gate +30 on *a*, up 1/30 on *b*, so the unit outputs *a* × *b*. It tests, cell by cell, whether the piece and a board row overlap.
+- **Threshold on a count**: two units compute [*u* ≥ *t*] = (silu(30(*u* − *t* + 1)) − silu(30(*u* − *t*)))/30 for an integer sum *u* of bits. With *t* equal to the number of inputs it is an AND, and with *t* = 1 it is an OR. "Row 19 is full" is 10 cells ≥ 10, a collision is the OR of 40 cell overlaps, and `LINES k` counts full rows.
+- **Multiplexer**: an AND between a one-hot selector and a source. It picks the board rows under the piece using the piece's y, and the new position using the collision bit.
+- **Rule table**: the protocol's control flow, meaning which kind of token comes next. Each row is one unit with +30 on each condition that must hold and −30 on each that must not. For example, the row for `kind=PIECE` with `spawn collides` writes `PHASE OVER`.
+
+A unit can read only fields that already exist at its layer's input, so a rule that depends on another rule's output goes one layer later. The compiler puts each primitive in the earliest MLP whose inputs are ready. The longest dependency chain is the move check, and its length is why the model has six layers:
+
+| Layer | Step of the move check |
+|---|---|
+| 0 | candidate rotation and x from the action (lookup) |
+| 1 | the candidate's cells (lookup on type, rotation, x) and the five board rows under the piece (multiplexer on y) |
+| 2 | each cell of the candidate AND the board cell under it |
+| 3 | collision: OR of the 40 cell overlaps and the out-of-bounds bit |
+| 4 | the new position (the candidate, or the old position on a collision) and the lock bit |
+| 5 | the fields of the `SETP` token, selected by the input token's kind |
+
+The LM head reads the output fields and gives the correct token a logit of 30.
+
+Two details keep this exact through the whole stack. Every primitive writes into dimensions that no other primitive uses, so the residual's additions never overlap. Every field also has a fixed number of 1s, so the residual norm is the same on every token, and each RMSNorm multiplies by a constant that the compiler folds into the next layer's gate and up weights. `qwentris/build.py` writes the game with these primitives, grouped by layer. Layer 1 uses all 1,860 hidden units, and that count sets the MLP's intermediate size.
+
 ## Run it
 
 Requires [uv](https://docs.astral.sh/uv/) and Python 3.11 or later.
 
 ```sh
 uv sync
-uv run python -m deltris.build models/deltris
-uv run python -m deltris.play --model models/deltris --device cpu
+uv run python -m qwentris.build models/qwentris
+uv run python -m qwentris.play --model models/qwentris --device cpu
 ```
 
 The build step writes the model directory and prints its shape. The play command opens the game in the terminal: left and right arrows move, up rotates clockwise, down passes the tick, and `q` quits. A CPU is enough to play.
@@ -43,7 +82,7 @@ To record a game as an MP4 with the four panels shown above:
 
 ```sh
 uv sync --group viz
-uv run python -m deltris.record --model models/deltris --device cuda --out game.mp4
+uv run python -m qwentris.record --model models/qwentris --device cuda --out game.mp4
 ```
 
 The environment must not contain the `fla` or `causal_conv1d` packages. If either is installed, `transformers` runs their kernels in place of its pure-PyTorch DeltaNet code, which is the code the tests check the model against.
@@ -82,8 +121,8 @@ The tests cover the reference Tetris engine, the token protocol, each compiler p
 The full check is a differential test against the reference engine. It feeds complete games to the model and compares every token the model emits, and the board decoded from its state after every token, with the reference:
 
 ```sh
-uv run python -m deltris.difftest --random 10000 --greedy 500 --batch BATCH \
-  --model models/deltris --out games.jsonl --device cuda
+uv run python -m qwentris.difftest --random 10000 --greedy 500 --batch BATCH \
+  --model models/qwentris --out games.jsonl --device cuda
 ```
 
 The token comparison is what checks the game logic. The board comparison checks that writes land in the right memory slot and stay there, since the model never reads the DISPLAY head.
@@ -114,13 +153,12 @@ For the planned benchmark, the nearest work is the set of interpretability bench
 
 | Path | Contents |
 |---|---|
-| `deltris/ref/` | Reference Tetris engine and the token protocol interpreter |
-| `deltris/compiler/` | Primitives and the code that lays them out as model weights |
-| `deltris/build.py` | The Tetris program, written with those primitives |
-| `deltris/play.py`, `record.py`, `difftest.py` | Terminal game, video recorder, differential test |
+| `qwentris/ref/` | Reference Tetris engine and the token protocol interpreter |
+| `qwentris/compiler/` | Primitives and the code that lays them out as model weights |
+| `qwentris/build.py` | The Tetris program, written with those primitives |
+| `qwentris/play.py`, `record.py`, `difftest.py` | Terminal game, video recorder, differential test |
 | `tests/` | Test suite |
 | `SPEC.md` | The design: architecture facts, game rules, token protocol, research protocol |
 | `DECISIONS.md` | Each place the implementation departs from or fills in the spec, with the reason |
 | `paper/` | LaTeX paper; numbers and figures are derived from `results/` |
 
-The Python package is named `deltris`.

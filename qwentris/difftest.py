@@ -5,7 +5,7 @@ after every token.
 The model is fed the isa trace (teacher forcing). Every token the model is asked to emit
 is checked, so a full match is the same as the model producing the trace on its own.
 
-    uv run python -m deltris.difftest --random 10000 --greedy 500 --out results/p2.jsonl
+    uv run python -m qwentris.difftest --random 10000 --greedy 500 --out results/p2.jsonl
 """
 
 import argparse
@@ -15,10 +15,10 @@ import time
 import numpy as np
 import torch
 
-from deltris.compiler.emit_hf import BatchRunner
-from deltris.games import play
-from deltris.ref import isa
-from deltris.ref.tetris import HEIGHT, WIDTH
+from qwentris.compiler.emit_hf import BatchRunner
+from qwentris.games import play
+from qwentris.ref import isa
+from qwentris.ref.tetris import HEIGHT, WIDTH
 
 PAD = ("NEED_PIECE",)  # fed after a game's trace ends; those positions are not checked
 GREEDY_PIECES = 100  # parameter: as in tests/test_isa.py, greedy games rarely top out
@@ -98,19 +98,19 @@ def main():
     ap.add_argument("--random", type=int, required=True)
     ap.add_argument("--greedy", type=int, required=True)
     ap.add_argument("--batch", type=int, required=True)
-    ap.add_argument("--model", required=True, help="directory written by python -m deltris.build")
+    ap.add_argument("--model", required=True, help="directory written by python -m qwentris.build")
     ap.add_argument("--out", required=True, help="JSONL, one line per game, appended as batches finish")
     ap.add_argument("--device", required=True)
     args = ap.parse_args()
 
     from transformers import AutoModelForCausalLM
 
-    from deltris.build import compile_deltris
+    from qwentris.build import compile_qwentris
 
     torch.backends.cuda.matmul.allow_tf32 = False  # exact fp32: the circuit assumes fp32 identities
     torch.backends.cudnn.allow_tf32 = False
     torch.set_float32_matmul_precision("highest")
-    prog = compile_deltris()
+    prog = compile_qwentris()
     model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float32).to(args.device).eval()
     print(f"model {type(model).__name__} on {args.device}", flush=True)
     specs = game_specs(args.random, args.greedy)

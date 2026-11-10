@@ -13,8 +13,8 @@ A term is (field, dim, integer coefficient). `lit` and `is_` build them.
 
 from itertools import product
 
-from deltris.compiler.graph import G, Head
-from deltris.compiler.layout import Field
+from qwentris.compiler.graph import G, Head
+from qwentris.compiler.layout import Field
 
 
 def lit(f, bit=0, on=True):
